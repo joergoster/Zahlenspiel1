@@ -1,7 +1,7 @@
-#include <cassert>
-#include <list>
-#include <iostream>
 #include <chrono>
+#include <cstdint>
+#include <iostream>
+#include <list>
 
 #include "search.h"
 
@@ -9,6 +9,7 @@ constexpr int n = 48;
 constexpr int VALUE_MATE = 1000;
 constexpr int VALUE_INFINITE = 1001;
 
+std::uint64_t cutoffs, nodes;
 Sequence allSequences[n+2]; // to avoid access with [n-2]
 
 // Function prototypes
@@ -64,25 +65,27 @@ int main() {
 //  int maxBestValue = long_player(-VALUE_INFINITE, 0, 0);
 //  std::cout << "Longest play for n = " << n << " is " << VALUE_MATE + maxBestValue << " plies" << std::endl;
 
+  nodes = cutoffs = 0;
   auto start1 = std::chrono::high_resolution_clock::now();
   int minmaxBestValue = short_player(ss, 0, VALUE_INFINITE);
   auto end1 = std::chrono::high_resolution_clock::now();
   auto duration1 = std::chrono::duration_cast<std::chrono::milliseconds>(end1 - start1);
 
   std::cout << "Best short-long play for n = " << n << " is " << VALUE_MATE - minmaxBestValue << " plies" << std::endl;
-  std::cout << "Time: " << duration1.count() << " ms" << std::endl;
+  std::cout << "Time: " << duration1.count() << " ms" << "   Nodes: " << nodes << "   Cutoffs: " << cutoffs << std::endl;
   std::cout << "PV:";
   for (int m : *(ss->pv))
       std::cout << " " << m;
   std::cout << std::endl;
 
+  nodes = cutoffs = 0;
   auto start2 = std::chrono::high_resolution_clock::now();
   int maxminBestValue = long_player(ss, -VALUE_INFINITE, 0);
   auto end2 = std::chrono::high_resolution_clock::now();
   auto duration2 = std::chrono::duration_cast<std::chrono::milliseconds>(end2 - start2);
 
   std::cout << "Best long-short play for n = " << n << " is " << VALUE_MATE + maxminBestValue << " plies" << std::endl;
-  std::cout << "Time: " << duration2.count() << " ms" << std::endl;
+  std::cout << "Time: " << duration2.count() << " ms" << "   Nodes: " << nodes << "   Cutoffs: " << cutoffs << std::endl;
   std::cout << "PV:";
   for (int m : *(ss->pv))
       std::cout << " " << m;
@@ -118,6 +121,8 @@ int short_player(Stack* ss, int alpha, int beta) {
       for (auto& tl : tempList)
            allSequences[tl].isActive = false;
 
+      nodes++;
+
       score = -long_player(ss+1, -beta, -alpha);
 
       for (auto& tl : tempList)
@@ -138,7 +143,10 @@ int short_player(Stack* ss, int alpha, int beta) {
       }
 
       if (score >= beta)
+      {
+          cutoffs++;
           return score;
+      }
 
       if (moveCount >= 4) break;
 
@@ -177,6 +185,8 @@ int long_player(Stack* ss, int alpha, int beta) {
       for (auto& tl : tempList)
            allSequences[tl].isActive = false;
 
+      nodes++;
+
       score = -short_player(ss+1, -beta, -alpha);
 
       for (auto& tl : tempList)
@@ -197,7 +207,10 @@ int long_player(Stack* ss, int alpha, int beta) {
       }
 
       if (score >= beta)
+      {
+          cutoffs++;
           return score;
+      }
 
       tempList.clear();
   }
