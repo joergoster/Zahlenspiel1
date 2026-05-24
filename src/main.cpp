@@ -1,6 +1,7 @@
 #include <cassert>
 #include <list>
 #include <iostream>
+#include <chrono>
 
 #include "search.h"
 
@@ -63,17 +64,25 @@ int main() {
 //  int maxBestValue = long_player(-VALUE_INFINITE, 0, 0);
 //  std::cout << "Longest play for n = " << n << " is " << VALUE_MATE + maxBestValue << " plies" << std::endl;
 
+  auto start1 = std::chrono::high_resolution_clock::now();
   int minmaxBestValue = short_player(ss, 0, VALUE_INFINITE);
+  auto end1 = std::chrono::high_resolution_clock::now();
+  auto duration1 = std::chrono::duration_cast<std::chrono::milliseconds>(end1 - start1);
 
   std::cout << "Best short-long play for n = " << n << " is " << VALUE_MATE - minmaxBestValue << " plies" << std::endl;
+  std::cout << "Time: " << duration1.count() << " ms" << std::endl;
   std::cout << "PV:";
   for (int m : *(ss->pv))
       std::cout << " " << m;
   std::cout << std::endl;
 
+  auto start2 = std::chrono::high_resolution_clock::now();
   int maxminBestValue = long_player(ss, -VALUE_INFINITE, 0);
+  auto end2 = std::chrono::high_resolution_clock::now();
+  auto duration2 = std::chrono::duration_cast<std::chrono::milliseconds>(end2 - start2);
 
   std::cout << "Best long-short play for n = " << n << " is " << VALUE_MATE + maxminBestValue << " plies" << std::endl;
+  std::cout << "Time: " << duration2.count() << " ms" << std::endl;
   std::cout << "PV:";
   for (int m : *(ss->pv))
       std::cout << " " << m;
@@ -198,4 +207,3 @@ int long_player(Stack* ss, int alpha, int beta) {
 
   return max;
 }
-
