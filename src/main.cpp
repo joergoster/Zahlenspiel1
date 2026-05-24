@@ -46,18 +46,45 @@ std::ostream& operator<<(std::ostream& ostr, const std::list<int>& list)
 }
 
 // Get next number with highest count in range [start, end]
+// Uses round-robin selection among tied numbers
 auto getNextHighestCount = [](int start, int end) -> int {
+    static int lastIndex = start - 1;
+    
     int bestNum = -1;
     int bestCount = -1;
+    std::list<int> candidates;
     
+    // First pass: find the best count
     for (int i = start; i <= end; i++)
     {
         if (allSequences[i].isActive && allSequences[i].count > bestCount)
         {
             bestCount = allSequences[i].count;
-            bestNum = i;
+            candidates.clear();
+            candidates.push_back(i);
+        }
+        else if (allSequences[i].isActive && allSequences[i].count == bestCount)
+        {
+            candidates.push_back(i);
         }
     }
+    
+    if (candidates.empty())
+        return -1;
+    
+    // Second pass: find the next candidate after lastIndex (round-robin)
+    for (int candidate : candidates)
+    {
+        if (candidate > lastIndex)
+        {
+            lastIndex = candidate;
+            return candidate;
+        }
+    }
+    
+    // Wrap around: return the first candidate
+    bestNum = candidates.front();
+    lastIndex = bestNum;
     return bestNum;
 };
 
