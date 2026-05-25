@@ -5,7 +5,7 @@
 
 #include "search.h"
 
-constexpr int n = 48;
+constexpr int n = 36;
 constexpr int VALUE_MATE = 1000;
 constexpr int VALUE_INFINITE = 1001;
 
@@ -17,22 +17,25 @@ int short_player(Stack* ss, int alpha, int beta);
 int  long_player(Stack* ss, int alpha, int beta);
 
 // Calculate the 'connected' numbers
-void generate_integer_divisors_and_multiples(int x) {
+void generate_integer_divisors_and_multiples() {
 
-  allSequences[x].count = 0;
-
-  // Adds all integer divisors and multiples in ascending order
-  for (int k = 2; k <= n; k++)
+  for (int i = 2; i <= n; i++)
   {
-      if ((k <= x && x % k == 0) || (k > x && k % x == 0))
-      {
-          allSequences[x].l.push_back(k);
-          allSequences[x].count++;
-      }
-  }
+      allSequences[i].count = 0;
 
-  // Activate
-  allSequences[x].isActive = true;
+      // Adds all integer divisors and multiples in ascending order
+      for (int k = 2; k <= n; k++)
+      {
+          if ((k <= i && i % k == 0) || (k > i && k % i == 0))
+          {
+              allSequences[i].l.push_back(k);
+              allSequences[i].count++;
+          }
+      }
+
+      // Activate
+      allSequences[i].isActive = true;
+  }
 }
 
 // For easier output of a list
@@ -55,9 +58,7 @@ int main() {
   for (int i = 0; i < MAX_PLY; i++)
       (ss+i)->ply = i;
 
-  for (int i = 2; i <= n; i++)
-      generate_integer_divisors_and_multiples(i);
-
+  generate_integer_divisors_and_multiples();
 
 //  int minBestValue = short_player(0, VALUE_INFINITE, 0);
 //  std::cout << "Shortest play for n = " << n << " is " << VALUE_MATE - minBestValue << " plies" << std::endl;
@@ -67,7 +68,9 @@ int main() {
 
   nodes = cutoffs = 0;
   auto start1 = std::chrono::high_resolution_clock::now();
-  int minmaxBestValue = short_player(ss, 0, VALUE_INFINITE);
+
+  int minmaxBestValue = short_player(ss, 0, VALUE_INFINITE); // short player begins
+
   auto end1 = std::chrono::high_resolution_clock::now();
   auto duration1 = std::chrono::duration_cast<std::chrono::milliseconds>(end1 - start1);
 
@@ -80,7 +83,9 @@ int main() {
 
   nodes = cutoffs = 0;
   auto start2 = std::chrono::high_resolution_clock::now();
-  int maxminBestValue = long_player(ss, -VALUE_INFINITE, 0);
+
+  int maxminBestValue = long_player(ss, -VALUE_INFINITE, 0); // long player begins
+
   auto end2 = std::chrono::high_resolution_clock::now();
   auto duration2 = std::chrono::duration_cast<std::chrono::milliseconds>(end2 - start2);
 
