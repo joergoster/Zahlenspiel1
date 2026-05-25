@@ -1,4 +1,3 @@
-#include <array>
 #include <chrono>
 #include <cstdint>
 #include <iostream>
@@ -11,7 +10,7 @@ constexpr int VALUE_MATE = 1000;
 constexpr int VALUE_INFINITE = 1001;
 
 std::uint64_t cutoffs, nodes;
-std::array<Sequence, n+1> allSequences; // index 0 unused, 1..n used
+Sequence allSequences[n+2]; // to avoid access with [n-2]
 
 // Function prototypes
 int short_player(Stack* ss, int alpha, int beta);
@@ -45,26 +44,10 @@ std::ostream& operator<<(std::ostream& ostr, const std::list<int>& list)
   return ostr;
 }
 
-// Get next number with highest count in range [start, end]
-auto getNextHighestCount = [](int start, int end) -> int {
-    int bestNum = -1;
-    int bestCount = -1;
-    
-    for (int i = start; i <= end; i++)
-    {
-        if (allSequences[i].isActive && allSequences[i].count > bestCount)
-        {
-            bestCount = allSequences[i].count;
-            bestNum = i;
-        }
-    }
-    return bestNum;
-};
-
 int main() {
 
-  std::array<Stack, MAX_PLY> stack = {};
-  Stack* ss = stack.data();
+  Stack stack[MAX_PLY] = {};
+  Stack* ss = stack;
 
   PVMoves pv; // Will contain the complete PV
   ss->pv = &pv;
@@ -123,11 +106,10 @@ int short_player(Stack* ss, int alpha, int beta) {
   PVMoves pv;
   (ss+1)->pv = &pv;
 
-  for (int moveCount_iter = 0; moveCount_iter < 4; moveCount_iter++)
+  for (int i = 2; i <= n; i++)
   {
-      int i = getNextHighestCount(2, n);
-      if (i == -1 || allSequences[i].isActive == false)
-          break;
+      if (allSequences[i].isActive == false)
+          continue;
 
       moveCount++;
 
@@ -165,6 +147,8 @@ int short_player(Stack* ss, int alpha, int beta) {
           cutoffs++;
           return score;
       }
+
+      if (moveCount >= 4) break;
 
       tempList.clear();
   }
