@@ -20,9 +20,12 @@ int  long_player(Stack* ss, int alpha, int beta);
 // Calculate the 'connected' numbers
 void generate_integer_divisors_and_multiples() {
 
-  // Insert two 'dummies' for n=0 and n=1
-  states.push_back(Sequence());
-  states.push_back(Sequence());
+  states.reserve(n + 1);
+
+  // Insert dummy entries for n=0 and n=1
+  for (int i = 0; i < 2; ++i) {
+      states.push_back(Sequence());
+  }
 
   for (int i = 2; i <= n; i++)
   {
