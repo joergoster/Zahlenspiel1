@@ -1,17 +1,18 @@
 #include <cassert>
 #include <chrono>
 #include <cstdint>
+#include <cstdlib>
 #include <iostream>
 #include <list>
 
 #include "search.h"
 
-constexpr int n = 40;
 constexpr int VALUE_MATE = 1000;
 constexpr int VALUE_INFINITE = 1001;
 
 std::uint64_t cutoffs, nodes;
 States states;
+int n = 40;
 
 // Function prototypes
 int short_player(Stack* ss, int alpha, int beta);
@@ -60,7 +61,19 @@ std::ostream& operator<<(std::ostream& ostr, const std::list<int>& list)
   return ostr;
 }
 
-int main() {
+int main(int argc, char* argv[]) {
+
+  // Parse command-line argument for n
+  if (argc > 1)
+  {
+      n = std::atoi(argv[1]);
+
+      if (n < 2)
+      {
+          std::cerr << "Error: n must be at least 2" << std::endl;
+          return 1;
+      }
+  }
 
   Stack stack[MAX_PLY] = {};
   Stack* ss = stack;
