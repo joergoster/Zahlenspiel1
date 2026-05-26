@@ -1,6 +1,7 @@
 #include <cstdint>
 #include <cstring>
 #include <list>
+#include <vector>
 
 #pragma once
 
@@ -11,6 +12,8 @@ struct Sequence {
   bool isActive;
   std::list<int> l;
 };
+
+using States = std::vector<Sequence>;
 
 struct PVMoves {
     int         moves[MAX_PLY];

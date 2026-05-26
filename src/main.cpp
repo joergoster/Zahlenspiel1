@@ -1,3 +1,4 @@
+#include <cassert>
 #include <chrono>
 #include <cstdint>
 #include <iostream>
@@ -5,12 +6,12 @@
 
 #include "search.h"
 
-constexpr int n = 36;
+constexpr int n = 40;
 constexpr int VALUE_MATE = 1000;
 constexpr int VALUE_INFINITE = 1001;
 
 std::uint64_t cutoffs, nodes;
-Sequence allSequences[n+2]; // to avoid access with [n-2]
+States states;
 
 // Function prototypes
 int short_player(Stack* ss, int alpha, int beta);
@@ -19,23 +20,32 @@ int  long_player(Stack* ss, int alpha, int beta);
 // Calculate the 'connected' numbers
 void generate_integer_divisors_and_multiples() {
 
+  // Insert two 'dummies' for n=0 and n=1
+  states.push_back(Sequence());
+  states.push_back(Sequence());
+
   for (int i = 2; i <= n; i++)
   {
-      allSequences[i].count = 0;
+      Sequence seq;
+      seq.count = 0;
 
       // Adds all integer divisors and multiples in ascending order
       for (int k = 2; k <= n; k++)
       {
           if ((k <= i && i % k == 0) || (k > i && k % i == 0))
           {
-              allSequences[i].l.push_back(k);
-              allSequences[i].count++;
+              seq.l.push_back(k);
+              seq.count++;
           }
       }
 
       // Activate
-      allSequences[i].isActive = true;
+      seq.isActive = true;
+
+      states.push_back(seq);
   }
+
+  assert(states.size() == n + 1);
 }
 
 // For easier output of a list
@@ -89,7 +99,7 @@ int main() {
   auto end2 = std::chrono::high_resolution_clock::now();
   auto duration2 = std::chrono::duration_cast<std::chrono::milliseconds>(end2 - start2);
 
-  std::cout << "Best long-short play for n = " << n << " is " << VALUE_MATE + maxminBestValue << " plies" << std::endl;
+  std::cout << "\nBest long-short play for n = " << n << " is " << VALUE_MATE + maxminBestValue << " plies" << std::endl;
   std::cout << "Time: " << duration2.count() << " ms" << "   Nodes: " << nodes << "   Cutoffs: " << cutoffs << std::endl;
   std::cout << "PV:";
   for (int m : *(ss->pv))
@@ -111,27 +121,27 @@ int short_player(Stack* ss, int alpha, int beta) {
   PVMoves pv;
   (ss+1)->pv = &pv;
 
-  for (int i = 2; i <= n; i++)
+  for (int i = 2; i < states.size(); i++)
   {
-      if (allSequences[i].isActive == false)
+      if (states[i].isActive == false)
           continue;
 
       moveCount++;
 
       // Now put all active members of this list into a new list
-      for (auto& m : allSequences[i].l)
-          if (allSequences[m].isActive)
+      for (auto& m : states[i].l)
+          if (states[m].isActive)
               tempList.push_back(m);
 
       for (auto& tl : tempList)
-           allSequences[tl].isActive = false;
+           states[tl].isActive = false;
 
       nodes++;
 
       score = -long_player(ss+1, -beta, -alpha);
 
       for (auto& tl : tempList)
-           allSequences[tl].isActive = true;
+           states[tl].isActive = true;
 
       if (score > max)
       {
@@ -175,27 +185,27 @@ int long_player(Stack* ss, int alpha, int beta) {
   PVMoves pv;
   (ss+1)->pv = &pv;
 
-  for (int i = n; i >= 2; i--)
+  for (int i = states.size() - 1; i >= 2; i--)
   {
-      if (allSequences[i].isActive == false)
+      if (states[i].isActive == false)
           continue;
 
       moveCount++;
 
       // Now put all active members of this list into a new list
-      for (auto& m : allSequences[i].l)
-          if (allSequences[m].isActive)
+      for (auto& m : states[i].l)
+          if (states[m].isActive)
               tempList.push_back(m);
 
       for (auto& tl : tempList)
-           allSequences[tl].isActive = false;
+           states[tl].isActive = false;
 
       nodes++;
 
       score = -short_player(ss+1, -beta, -alpha);
 
       for (auto& tl : tempList)
-           allSequences[tl].isActive = true;
+           states[tl].isActive = true;
 
       if (score > max)
       {
