@@ -8,13 +8,15 @@
 constexpr int MAX_PLY = 128;
 
 struct Sequence {
-  int count; // instead of l.size()
   bool isActive;
+  int count;
+  int diff;
   std::list<int> l;
 };
 
 using States = std::vector<Sequence>;
 
+// Borrowed from Stockfish, a UCI chess engine
 struct PVMoves {
     int         moves[MAX_PLY];
     std::size_t length = 0;

@@ -1,3 +1,4 @@
+#include <algorithm>
 #include <cassert>
 #include <chrono>
 #include <cstdint>
@@ -32,6 +33,7 @@ void generate_integer_divisors_and_multiples() {
   {
       Sequence seq;
       seq.count = 0;
+      seq.diff = 0;
 
       // Adds all integer divisors and multiples in ascending order
       for (int k = 2; k <= n; k++)
@@ -99,9 +101,10 @@ int main(int argc, char* argv[]) {
 
   auto end1 = std::chrono::high_resolution_clock::now();
   auto duration1 = std::chrono::duration_cast<std::chrono::milliseconds>(end1 - start1);
+  int nps1 = nodes * 1000 / duration1.count();
 
   std::cout << "Best short-long play for n = " << n << " is " << VALUE_MATE - minmaxBestValue << " plies" << std::endl;
-  std::cout << "Time: " << duration1.count() << " ms" << "   Nodes: " << nodes << "   Cutoffs: " << cutoffs << std::endl;
+  std::cout << "Time: " << duration1.count() << " ms" << "   Nodes: " << nodes << "   Nodes per second: " << nps1 << "   Cutoffs: " << cutoffs << std::endl;
   std::cout << "PV:";
   for (int m : *(ss->pv))
       std::cout << " " << m;
@@ -114,9 +117,10 @@ int main(int argc, char* argv[]) {
 
   auto end2 = std::chrono::high_resolution_clock::now();
   auto duration2 = std::chrono::duration_cast<std::chrono::milliseconds>(end2 - start2);
+  int nps2 = nodes * 1000 / duration2.count();
 
   std::cout << "\nBest long-short play for n = " << n << " is " << VALUE_MATE + maxminBestValue << " plies" << std::endl;
-  std::cout << "Time: " << duration2.count() << " ms" << "   Nodes: " << nodes << "   Cutoffs: " << cutoffs << std::endl;
+  std::cout << "Time: " << duration2.count() << " ms" << "   Nodes: " << nodes << "   Nodes per second: " << nps2 << "   Cutoffs: " << cutoffs << std::endl;
   std::cout << "PV:";
   for (int m : *(ss->pv))
       std::cout << " " << m;
@@ -144,18 +148,47 @@ int short_player(Stack* ss, int alpha, int beta) {
 
       moveCount++;
 
-      // Now put all active members of this list into a new list
+      // Make the move ...
+      // Put all active members of this list into a new list.
+      // Needed for undoing the move.
       for (auto& m : states[i].l)
           if (states[m].isActive)
               tempList.push_back(m);
 
+      // Deactivate all members
       for (auto& tl : tempList)
            states[tl].isActive = false;
+
+      // Reduce the count for active lists
+      // which have the member in their list.
+      for (auto& m : states[i].l)
+          for (int j = 2; j < states.size(); j++)
+          {
+              if (   states[j].isActive
+                  && std::count(states[j].l.begin(), states[j].l.end(), m))
+              {
+                  states[j].count--;
+                  states[j].diff++;
+              }
+          }
 
       nodes++;
 
       score = -long_player(ss+1, -beta, -alpha);
 
+      // Unmake the move.
+      // Restore the old count
+      for (auto& m : states[i].l)
+          for (int j = 2; j < states.size(); j++)
+          {
+              if (states[j].isActive)
+              {
+                  states[j].count += states[j].diff;
+                  states[j].diff = 0;
+              }
+          }
+
+      // Reactivate the lists
       for (auto& tl : tempList)
            states[tl].isActive = true;
 
@@ -208,18 +241,47 @@ int long_player(Stack* ss, int alpha, int beta) {
 
       moveCount++;
 
-      // Now put all active members of this list into a new list
+      // Make the move ...
+      // Put all active members of this list into a new list.
+      // Needed for undoing the move.
       for (auto& m : states[i].l)
           if (states[m].isActive)
               tempList.push_back(m);
 
+      // Deactivate all members
       for (auto& tl : tempList)
            states[tl].isActive = false;
+
+      // Reduce the count for active lists
+      // which have the member in their list.
+      for (auto& m : states[i].l)
+          for (int j = 2; j < states.size(); j++)
+          {
+              if (   states[j].isActive
+                  && std::count(states[j].l.begin(), states[j].l.end(), m))
+              {
+                  states[j].count--;
+                  states[j].diff++;
+              }
+          }
 
       nodes++;
 
       score = -short_player(ss+1, -beta, -alpha);
 
+      // Unmake the move.
+      // Restore the old count
+      for (auto& m : states[i].l)
+          for (int j = 2; j < states.size(); j++)
+          {
+              if (states[j].isActive)
+              {
+                  states[j].count += states[j].diff;
+                  states[j].diff = 0;
+              }
+          }
+
+      // Reactivate the lists
       for (auto& tl : tempList)
            states[tl].isActive = true;
 
