@@ -101,7 +101,7 @@ int main(int argc, char* argv[]) {
 
   auto end1 = std::chrono::high_resolution_clock::now();
   auto duration1 = std::chrono::duration_cast<std::chrono::milliseconds>(end1 - start1);
-  int nps1 = nodes * 1000 / duration1.count();
+  int nps1 = nodes * 1000 / (duration1.count() + 1);
 
   std::cout << "Best short-long play for n = " << n << " is " << VALUE_MATE - minmaxBestValue << " plies" << std::endl;
   std::cout << "Time: " << duration1.count() << " ms" << "   Nodes: " << nodes << "   Nodes per second: " << nps1 << "   Cutoffs: " << cutoffs << std::endl;
@@ -117,7 +117,7 @@ int main(int argc, char* argv[]) {
 
   auto end2 = std::chrono::high_resolution_clock::now();
   auto duration2 = std::chrono::duration_cast<std::chrono::milliseconds>(end2 - start2);
-  int nps2 = nodes * 1000 / duration2.count();
+  int nps2 = nodes * 1000 / (duration2.count() + 1);
 
   std::cout << "\nBest long-short play for n = " << n << " is " << VALUE_MATE + maxminBestValue << " plies" << std::endl;
   std::cout << "Time: " << duration2.count() << " ms" << "   Nodes: " << nodes << "   Nodes per second: " << nps2 << "   Cutoffs: " << cutoffs << std::endl;
