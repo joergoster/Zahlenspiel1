@@ -5,7 +5,7 @@
 
 #pragma once
 
-constexpr int MAX_PLY = 128;
+constexpr int MAX_PLY = 2048;
 
 struct Sequence {
   bool isActive;
